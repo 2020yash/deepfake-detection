@@ -1,0 +1,95 @@
+import React, { useState } from 'react';
+import { Button } from "/components/ui/button";
+import { Card, CardContent } from "/components/ui/card";
+import { Upload } from "lucide-react";
+how run this code in vscode
+
+
+
+
+const detectDeepfake = async (image) => {
+  // Replace this with actual detection logic (API or model integration)
+  const isDeepfake = Math.random() < 0.7; // simulate more likely deepfake with 70% chance
+  const confidence = (Math.random() * 0.5 + 0.5) * 100; // confidence between 50% - 100%
+  return { isDeepfake, confidence: confidence.toFixed(2) };
+};
+
+export default function DeepfakeDetection() {
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [result, setResult] = useState(null);
+  const [confidence, setConfidence] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
+      setError(null);
+      setResult(null); // Reset result
+    } else {
+      setError("Please upload a valid image file.");
+    }
+  };
+
+  const handleDetect = async () => {
+    if (!image) {
+      setError("Please upload an image first.");
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+    try {
+      const { isDeepfake, confidence } = await detectDeepfake(image);
+      setResult(isDeepfake);
+      setConfidence(confidence);
+    } catch (error) {
+      setError("An error occurred during detection.");
+    }
+    setLoading(false);
+  };
+
+  const resetDetection = () => {
+    setImage(null);
+    setPreview(null);
+    setResult(null);
+    setConfidence(null);
+    setError(null);
+  };
+
+  return (
+    <div className="flex flex-col items-center space-y-6 p-4 md:p-8 bg-gray-100 min-h-screen">
+      <h1 className="text-4xl font-bold tracking-tight text-gray-800 mb-6">Deepfake Detection</h1>
+      <Card className="w-full max-w-lg shadow-lg rounded-lg overflow-hidden bg-white">
+        <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
+          {preview ? (
+            <img src={preview} alt="Uploaded Preview" className="h-48 w-48 rounded-md object-cover mb-4" />
+          ) : (
+            <Upload className="h-12 w-12 text-primary mb-4" />
+          )}
+          <input type="file" onChange={handleImageChange} className="hidden" id="upload" />
+          <label htmlFor="upload" className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-all">
+            Choose an Image
+          </label>
+          {error && <p className="text-red-500">{error}</p>}
+          <Button onClick={handleDetect} disabled={loading || !image} className="mt-4 w-full">
+            {loading ? "Detecting..." : "Detect Deepfake"}
+          </Button>
+          {loading && <p className="text-lg font-semibold text-blue-500 mt-2 animate-pulse">Analyzing...</p>}
+          {result !== null && (
+            <div className="text-lg font-semibold mt-4">
+              <p>{result ? "Image is likely a deepfake" : "Image is likely not a deepfake"}</p>
+              <p className="text-sm text-gray-500">Confidence: {confidence}%</p>
+            </div>
+          )}
+          <Button onClick={resetDetection} variant="outline" className="mt-4">
+            Reset
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
